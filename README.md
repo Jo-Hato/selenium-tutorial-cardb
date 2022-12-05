@@ -1,1 +1,2 @@
-readme
+A tutorial project for Selenium web crawling.
+The codes are still underconstruction, so nothing much here to see...
