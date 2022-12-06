@@ -16,7 +16,7 @@ con = sl.connect(db_name)
 cur = con.cursor()
 cur.execute("""
     CREATE TABLE IF NOT EXISTS car_tire(
-        Id          INTEGER PRIMARY KEY,
+        Id          INTEGER PRIMARY KEY AUTOINCREMENT,
         PostDate    TEXT,
         ImgUrl      TEXT,
         Mfr         TEXT NOT NULL,
@@ -79,9 +79,25 @@ for page in range(p_s, p_e+1):
             elif (i%5==4): # 4 "エンジン名", "排気量/吸気方式", "ドライブ/ギア数", "車種"
                 data["Archetype"] = txts[3]
                 dicts.append(data)
-        df = pd.DataFrame(dicts)
-        print(df)
-    except:
-        print("!!!")
+        #df = pd.DataFrame(dicts)
+        #df.drop(df.columns, axis=1, inplace=True)
+        #print(df)
+        # DB処理
+        for d in dicts:
+            arr = []
+            for key in keys:
+                arr.append(d[key])
+            tup = tuple(arr)
+            print(tup)
+            con.execute("""
+                INSERT INTO car_tire(PostDate, ImgUrl, Mfr, MdlCode, Name, Grade,
+                T_OD_mm, T_Width, T_Ratio, T_SR_Cnst, RimR_in, GrndClr_mm, Archetype)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
+            """, tup)
+            con.commit()
+    except Exception as e:
+        print("!!!", e)
     sleep(3)
+cur.close()
+con.close()
 driver.quit()
