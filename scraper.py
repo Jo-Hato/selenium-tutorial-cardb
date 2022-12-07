@@ -10,6 +10,17 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 
+# Selenium User Parameters
+b_url =  "https://rank.greeco-channel.com/diamtire/?pg=" # base_url
+p_s = 1 # page_start
+p_e = 3 # page_end
+
+my_options = Options()
+my_options.add_argument("--incognito") # use incognito mode/匿名モードでChromeを使う
+
+driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=my_options) # Set webdriver
+driver.implicitly_wait(10) # Set implicit wait time/暗示的な待機時間を設定
+
 # Log
 e_log = ""
 
@@ -36,17 +47,6 @@ cur.execute("""
     );
 """)
 con.commit()
-
-# Selenium User Parameters
-b_url =  "https://rank.greeco-channel.com/diamtire/?pg=" # base_url
-p_s = 1 # page_start
-p_e = 3 # page_end
-
-my_options = Options()
-my_options.add_argument("--incognito") # use incognito mode/匿名モードでChromeを使う
-
-driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=my_options) # Set webdriver
-driver.implicitly_wait(10) # Set implicit wait time/暗示的な待機時間を設定
 
 for page in range(p_s, p_e+1):
     url = b_url + str(page)
@@ -106,5 +106,6 @@ for page in range(p_s, p_e+1):
 cur.close()
 con.close()
 driver.quit()
-with open('error_log.txt', 'w') as f:
-    f.write(e_log)
+if (len(e_log)>0):
+    with open('error_log.txt', 'w') as f:
+        f.write()
