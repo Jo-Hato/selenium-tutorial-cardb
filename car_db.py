@@ -10,6 +10,9 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 
+# Error Log
+e_log = ""
+
 # SQLite3
 db_name = "car.db"
 con = sl.connect(db_name)
@@ -37,7 +40,7 @@ con.commit()
 # Selenium User Parameters
 b_url =  "https://rank.greeco-channel.com/diamtire/?pg=" # base_url
 p_s = 1 # page_start
-p_e = 10 # page_end
+p_e = 3 # page_end
 
 my_options = Options()
 my_options.add_argument("--incognito") # use incognito mode/匿名モードでChromeを使う
@@ -47,7 +50,6 @@ driver.implicitly_wait(10) # Set implicit wait time/暗示的な待機時間を�
 
 for page in range(p_s, p_e+1):
     url = b_url + str(page)
-
     try:
         driver.get(url)
         e_tbls = driver.find_elements(By.XPATH, "//tr[contains(@class,'line27')]/td") # make driver find the table via xpath/ドライバにxpath経由でtbl>trを探させる
@@ -84,20 +86,25 @@ for page in range(p_s, p_e+1):
         #print(df)
         # DB処理
         for d in dicts:
+            # python.dict -> python.tuple (keysの順番通り)にデータ型をキャスト
             arr = []
             for key in keys:
                 arr.append(d[key])
             tup = tuple(arr)
-            print(tup)
             con.execute("""
                 INSERT INTO car_tire(PostDate, ImgUrl, Mfr, MdlCode, Name, Grade,
                 T_OD_mm, T_Width, T_Ratio, T_SR_Cnst, RimR_in, GrndClr_mm, Archetype)
                 VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
             """, tup)
             con.commit()
+            print(f"page {page}|{tup}")
     except Exception as e:
-        print("!!!", e)
+        e_line = f"!!!{page}|||" + str(e)
+        print(e_line)
+        e_log += e_line+"\n"
     sleep(3)
 cur.close()
 con.close()
 driver.quit()
+with open('error_log.txt', 'w') as f:
+    f.write(e_log)
