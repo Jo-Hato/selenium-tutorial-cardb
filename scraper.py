@@ -109,7 +109,7 @@ for page in range(p_s, p_e+1):
             e_line = f"!!!SOMETHING WENT WRONG AT (may be bad url): page = {page}, url = {url} ||| ERROR CODE: {str(e)}"
             print(e_line)
             e_log += e_line+"\n"
-    print(f"PROGRESS (aprox.): {n_try / (p_e - p_s) * 10}")
+    print(f"PROGRESS (aprox.): {n_try / (p_e+1 - p_s) * 10}")
     sleep(3)
 cur.close()
 con.close()
