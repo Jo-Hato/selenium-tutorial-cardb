@@ -11,5 +11,5 @@ print(len(res))
 print(type(res)) # タイプを確認する。
 print() # ただの改行。
 
-for rec in res[]:
+for rec in res:
     print(rec)
