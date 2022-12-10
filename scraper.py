@@ -12,8 +12,8 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 # Selenium User Parameters
 b_url =  "https://rank.greeco-channel.com/diamtire/?pg=" # base_url
-p_s = 8000 # page_start
-p_e = 9000 # page_end
+p_s = 1 # page_start
+p_e = 3 # page_end
 
 my_options = Options()
 my_options.add_argument("--incognito") # use incognito mode/匿名モードでChromeを使う
