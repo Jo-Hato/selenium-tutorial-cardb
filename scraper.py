@@ -70,7 +70,7 @@ for page in range(p_s, p_e+1):
                 data["Grade"] = txts[2]
                 data["MdlCode"] = None if (txts[3] == "型式不明") else txts[3][1:-1]
             elif (i%5==3): # 4 "外径”, “タイヤサイズ(mm/ratio/inch)", "地上高", "RPM(100kmph)"
-                data["T-OD_mm"] = None if (txts[0] == None) else int(txts[0][:-2])
+                data["T_OD_mm"] = None if (txts[0] == None) else int(txts[0][:-2])
                 tire = txts[1]
                 w, r, sc, rrad = tire[:3], tire[4:6], tire[6:-2], tire[-2:]
                 data["T_Width"] = int(w)
