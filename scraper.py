@@ -12,8 +12,8 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 # Selenium User Parameters
 b_url =  "https://rank.greeco-channel.com/diamtire/?pg=" # base_url
-p_s = 1 # page_start
-p_e = 3 # page_end
+p_s = 8000 # page_start
+p_e = 9000 # page_end
 
 my_options = Options()
 my_options.add_argument("--incognito") # use incognito mode/匿名モードでChromeを使う
@@ -46,11 +46,12 @@ cur.execute("""
         RimR_in     INTEGER,
         GrndClr_mm  INTEGER,
         Archetype   TEXT,
-        UNIQUE(MdlCode, Grade)
+        UNIQUE(Name, MdlCode, Grade)
     );
 """)
 con.commit()
 
+# Crawling
 for page in range(p_s, p_e+1):
     url = b_url + str(page)
     try:
@@ -61,7 +62,7 @@ for page in range(p_s, p_e+1):
         for (i, tbl) in enumerate(e_tbls):
             txts = tbl.text.split("\n")
             if (i%5==0):   # 2 "製造元", "型番(省略)"
-                data = dict.fromkeys(keys, None) # Initialize emtpy dict/空の辞書を用意する
+                data = dict.fromkeys(keys, "-") # Initialize emtpy dict/空の辞書を用意する
                 data["Mfr"] = "".join(txts[:-1])
             elif (i%5==1): # 1 "画像url"
                 e_c = tbl.find_element(By.XPATH, './*') # e_c = element_child = 要素_子
@@ -71,16 +72,16 @@ for page in range(p_s, p_e+1):
                 data["PostDate"] = txts[0]
                 data["Name"] = txts[1].replace(" ","") # Remove space/スペースを排除
                 data["Grade"] = txts[2]
-                data["MdlCode"] = None if (txts[3] == "型式不明") else txts[3][1:-1]
+                data["MdlCode"] = "-" if (txts[3] == "型式不明") else txts[3][1:-1]
             elif (i%5==3): # 4 "外径”, “タイヤサイズ(mm/ratio/inch)", "地上高", "RPM(100kmph)"
-                data["T_OD_mm"] = None if (txts[0] == None) else int(txts[0][:-2])
+                data["T_OD_mm"] = "-" if (txts[0] == "-") else int(txts[0][:-2])
                 tire = txts[1]
                 w, r, sc, rrad = tire[:3], tire[4:6], tire[6:-2], tire[-2:]
                 data["T_Width"] = int(w)
                 data["T_Ratio"] = int(r)
                 data["T_SR_Cnst"] = sc
                 data["RimR_in"] = int(rrad)
-                data["GrndClr_mm"] = None if (txts[2]=="-") else int(txts[2][1:-3])
+                data["GrndClr_mm"] = "-" if (txts[2]=="-") else int(txts[2][1:-3])
             elif (i%5==4): # 4 "エンジン名", "排気量/吸気方式", "ドライブ/ギア数", "車種"
                 data["Archetype"] = txts[3]
                 dicts.append(data)
@@ -91,18 +92,24 @@ for page in range(p_s, p_e+1):
         for (i, d) in enumerate(dicts):
             n_try += 1
             tup = tuple(d.values()) # dict.valuesをtupleにキャストする
-            con.execute("""
-                INSERT INTO car_tire(PostDate, ImgUrl, Mfr, MdlCode, Name, Grade,
-                T_OD_mm, T_Width, T_Ratio, T_SR_Cnst, RimR_in, GrndClr_mm, Archetype)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
-            """, tup)
-            con.commit()
-            n_good += 1
+            try:
+                con.execute("""
+                    INSERT INTO car_tire(PostDate, ImgUrl, Mfr, MdlCode, Name, Grade,
+                    T_OD_mm, T_Width, T_Ratio, T_SR_Cnst, RimR_in, GrndClr_mm, Archetype)
+                    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
+                """, tup)
+                con.commit()
+                n_good += 1
+            except Exception as e:
+                e_line = f"!!!INSERTION FAILED AT: page = {page}, row = {i} ||| ERROR CODE: {str(e)} ||| DETAIL: {tup}"
+                print(e_line)
+                e_log += e_line+"\n"
     except Exception as e:
-        e_line = f"!!!INSERTION FAILED AT: page = {page}, row = {i} ||| ERROR CODE: {str(e)} ||| DETAIL: {tup}"
-        print(e_line)
-        e_log += e_line+"\n"
-    print(f"PROGRESS (aprox.): {n_try / p_e * 10}")
+            n_try += 10
+            e_line = f"!!!SOMETHING WENT WRONG AT (may be bad url): page = {page}, url = {url} ||| ERROR CODE: {str(e)}"
+            print(e_line)
+            e_log += e_line+"\n"
+    print(f"PROGRESS (aprox.): {n_try / (p_e - p_s) * 10}")
     sleep(3)
 cur.close()
 con.close()
