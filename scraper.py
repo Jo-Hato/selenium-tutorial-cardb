@@ -23,6 +23,8 @@ driver.implicitly_wait(10) # Set implicit wait time/暗示的な待機時間を�
 
 # Log
 e_log = ""
+n_try = 0
+n_good = 0
 
 # SQLite3
 db_name = "car.db"
@@ -34,7 +36,7 @@ cur.execute("""
         PostDate    TEXT,
         ImgUrl      TEXT,
         Mfr         TEXT NOT NULL,
-        MdlCode     TEXT UNIQUE,
+        MdlCode     TEXT,
         Name        TEXT NOT NULL,
         Grade       TEXT,
         T_OD_mm     INTEGER,
@@ -43,7 +45,8 @@ cur.execute("""
         T_SR_Cnst   INTEGER,
         RimR_in     INTEGER,
         GrndClr_mm  INTEGER,
-        Archetype   TEXT
+        Archetype   TEXT,
+        UNIQUE(MdlCode, Grade)
     );
 """)
 con.commit()
@@ -85,36 +88,26 @@ for page in range(p_s, p_e+1):
         #df.drop(df.columns, axis=1, inplace=True)
         #print(df)
         # DB処理
-        for d in dicts:
-            # python.dict -> python.tuple (keysの順番通り)にデータ型をキャスト
-            # 現在、レコードはDict型「{"key_a": "val_1", ..., "key_N" = "val_N"}」
-            # ただし、SQLiteはレコードを挿入する時Tuple型「("val_1", ..., "val_N")」を好む
-            #
-            # よって、
-            # 1. keys = ["PostDate", "ImgUrl", "Mfr", ..., "Archetype"]を
-            # 順番にループして、対応するdict["key_name"]を入れてリストにappendする。
-            # ["20XX/XX", "www.abc.com/xyz.png", "トヨタ", ..., "クーペ"]
-            #
-            # 2. List型ではSQLiteでレコード挿入できないのでTuple型にキャストする
-            arr = []
-            for key in keys: # 1
-                arr.append(d[key])
-            tup = tuple(arr) # 2
+        for (i, d) in enumerate(dicts):
+            n_try += 1
+            tup = tuple(d.values()) # dict.valuesをtupleにキャストする
             con.execute("""
                 INSERT INTO car_tire(PostDate, ImgUrl, Mfr, MdlCode, Name, Grade,
                 T_OD_mm, T_Width, T_Ratio, T_SR_Cnst, RimR_in, GrndClr_mm, Archetype)
                 VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
             """, tup)
             con.commit()
-            print(f"page {page}|{tup}")
+            n_good += 1
     except Exception as e:
-        e_line = f"!!!{page}|||" + str(e)
+        e_line = f"!!!INSERTION FAILED AT: page = {page}, row = {i} ||| ERROR CODE: {str(e)} ||| DETAIL: {tup}"
         print(e_line)
         e_log += e_line+"\n"
+    print(f"PROGRESS (aprox.): {n_try / p_e * 10}")
     sleep(3)
 cur.close()
 con.close()
 driver.quit()
+print(f"SUCCESS RATE (passes/tries): {n_good}/{n_try}. FAILED: {n_try - n_good}")
 if (len(e_log)>0):
     with open('error_log.txt', 'w') as f:
-        f.write()
+        f.write(e_log)
