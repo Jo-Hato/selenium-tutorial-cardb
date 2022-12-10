@@ -87,10 +87,19 @@ for page in range(p_s, p_e+1):
         # DB処理
         for d in dicts:
             # python.dict -> python.tuple (keysの順番通り)にデータ型をキャスト
+            # 現在、レコードはDict型「{"key_a": "val_1", ..., "key_N" = "val_N"}」
+            # ただし、SQLiteはレコードを挿入する時Tuple型「("val_1", ..., "val_N")」を好む
+            #
+            # よって、
+            # 1. keys = ["PostDate", "ImgUrl", "Mfr", ..., "Archetype"]を
+            # 順番にループして、対応するdict["key_name"]を入れてリストにappendする。
+            # ["20XX/XX", "www.abc.com/xyz.png", "トヨタ", ..., "クーペ"]
+            #
+            # 2. List型ではSQLiteでレコード挿入できないのでTuple型にキャストする
             arr = []
-            for key in keys:
+            for key in keys: # 1
                 arr.append(d[key])
-            tup = tuple(arr)
+            tup = tuple(arr) # 2
             con.execute("""
                 INSERT INTO car_tire(PostDate, ImgUrl, Mfr, MdlCode, Name, Grade,
                 T_OD_mm, T_Width, T_Ratio, T_SR_Cnst, RimR_in, GrndClr_mm, Archetype)
