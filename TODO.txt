@@ -1,0 +1,3 @@
+TODO
+
+- make error logging part more critical-error resistance, so even when the code hard crashes, it logs.
