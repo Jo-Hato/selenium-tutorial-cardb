@@ -1,6 +1,6 @@
 import sqlite3 as sl # SQLite3を"sl"という名前でインポートする。
 
-db_name = "car.db"
+db_name = "car_90percent.db"
 con = sl.connect(db_name)
 cur = con.cursor()
 
