@@ -1,6 +1,6 @@
 import os
+import random
 from time import sleep
-from tabulate import tabulate
 import pandas as pd
 import sqlite3 as sl
 
@@ -13,7 +13,8 @@ from webdriver_manager.chrome import ChromeDriverManager
 # Selenium User Parameters
 b_url =  "https://rank.greeco-channel.com/diamtire/?pg=" # base_url
 p_s = 1 # page_start
-p_e = 5 # page_end
+p_e = 431 # page_end
+slp_t = 15 # sleep_tim
 
 my_options = Options()
 my_options.add_argument("--incognito") # use incognito mode/匿名モードでChromeを使う
@@ -25,6 +26,13 @@ driver.implicitly_wait(10) # Set implicit wait time/暗示的な待機時間を�
 e_log = ""
 n_try = 0
 n_good = 0
+
+# Random Time Generator
+def my_rand(seconds):
+    mu = seconds
+    sigma = seconds * 0.33 # secondsの33パーセント
+    wait_sec = random.gauss(mu, sigma)
+    return seconds if (wait_sec < 0) else seconds
 
 # SQLite3
 db_name = "car.db"
@@ -110,11 +118,12 @@ for page in range(p_s, p_e+1):
             print(e_line)
             e_log += e_line+"\n"
     print(f"PROGRESS (aprox.): {n_try / (p_e+1 - p_s) * 10}")
-    sleep(3)
+    sleep(my_rand(slp_t))
 cur.close()
 con.close()
 driver.quit()
 print(f"SUCCESS RATE (passes/tries): {n_good}/{n_try}. FAILED: {n_try - n_good}")
 if (len(e_log)>0):
     with open('error_log.txt', 'w') as f:
-        f.write(e_log)
+        header = f"START PAGE: {page_s}, END PAGE: {page_e}\n"
+        f.write(header + e_log)
