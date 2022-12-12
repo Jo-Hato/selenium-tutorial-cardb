@@ -14,7 +14,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 b_url =  "https://rank.greeco-channel.com/diamtire/?pg=" # base_url
 p_s = 1 # page_start
 p_e = 431 # page_end
-slp_t = 15 # sleep_tim
+slp_t = 15 # sleep_time
 
 my_options = Options()
 my_options.add_argument("--incognito") # use incognito mode/匿名モードでChromeを使う
@@ -125,5 +125,5 @@ driver.quit()
 print(f"SUCCESS RATE (passes/tries): {n_good}/{n_try}. FAILED: {n_try - n_good}")
 if (len(e_log)>0):
     with open('error_log.txt', 'w') as f:
-        header = f"START PAGE: {page_s}, END PAGE: {page_e}\n"
+        header = f"START PAGE: {p_s}, END PAGE: {p_e}\n"
         f.write(header + e_log)
